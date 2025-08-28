@@ -1,11 +1,21 @@
+# Compose v2: omit "version:"
 services:
   web:
     build: .
-    command: sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
+    # The Dockerfile's CMD already runs uvicorn on port 5000.
+    # If you prefer, you can override with:
+    # command: sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-5000}"
     environment:
-      PORT: "8000"
+      # keep PORT visible if your app reads it, but Dockerfile command sets 5000
+      PORT: "5000"
     expose:
-      - "8000"
+      - "5000"
     ports:
-      - "127.0.0.1:8000:8000"
+      # Bind the container to the host loopback where Nginx can reach it
+      - "127.0.0.1:5000:5000"
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
